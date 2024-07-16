@@ -1,1 +1,179 @@
-test
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bing検索iframe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            padding: 5px;
+        }
+        .search-frame {
+            width: 100%;
+            height: 600px;
+            border: none;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .instructions {
+            margin-bottom: 20px;
+        }
+        .search-history {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <div class="div alert alert-primary m-1">Auto Bing Search</div>
+        <h2>使い方</h2>
+        <ol class="list-group list-group-numbered">
+            <li class="list-group-item">Bingのウェブサイト(<a href="https://www.bing.com/" target="_blank">https://www.bing.com/</a>)を開き、何かキーワードで検索します。</li>
+            <li class="list-group-item">検索ワードは何でも構いませんが、ログインしている状態で行ってください。</li>
+            <li class="list-group-item">検索した後、BingのURLを全てコピーします。</li>
+            <li class="list-group-item text-break">例えば、以下のようなパラメータがあるURLが良いでしょう：<br>https://www.bing.com/search?q=%E3%81%B0%E3%81%AA%E3%81%AA&form=QBLH&sp=-1&lq=0&pq=%E3%81%B0%E3%81%AA%E3%81%AA&sc=11-3&qs=n&sk=&cvid=EC7EC716BF8EC7B7480373FEEC7AFE1E8&ghsh=0&ghacc=0&ghpl=</li>
+            <li class="list-group-item">「検索URL」フィールドにコピーしたURLをそのまま貼り付けます。</li>
+            <li class="list-group-item">秒数を指定し、「更新開始」ボタンをクリックします。</li>
+        </ol>
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text">検索URL:</span>
+        <textarea class="form-control" id="searchUrl" style="height:250px" rows="2" placeholder="">https://www.bing.com/search?q=%E3%81%B0%E3%81%AA%E3%81%AA&form=QBLH&sp=-1&lq=0&pq=%E3%81%B0%E3%81%AA%E3%81%AA&sc=11-3&qs=n&sk=&cvid=EC7EC716BF8EC7B7480373FEEC7AFE1E8&ghsh=0&ghacc=0&ghpl=</textarea>
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text">更新間隔（秒）:</span>
+        <input type="number" class="form-control" id="updateInterval" value="16">
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text">〇回ごとに:</span>
+        <input type="number" class="form-control" id="intervalCount" value="33">
+    </div>
+    <div class="input-group mb-3">
+        <span class="input-group-text">〇分のインターバル:</span>
+        <input type="number" class="form-control" id="breakInterval" value="60">
+    </div>
+    <div class="progress">
+        <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">クールダウン中</div>
+    </div>
+    <div class="d-flex justify-content-start my-2">
+        <button class="btn btn-primary me-2" id="startUpdate">更新開始</button>
+        <button class="btn btn-danger" id="stopUpdate">更新ストップ</button>
+    </div>
+    <div class="search-history">
+        <h3>検索履歴</h3>
+        <p>検索回数: <span id="searchCount">0</span></p>
+        <div id="searchList"></div>
+    </div>
+<!--
+    <div class="alert alert-info">
+		<p>実験：スマホを放置してポイントを稼ぎたい方はYoutubeの動画を再生しててください。低画質にするのをおすすめします。</p>
+		<p>画面のタイムアウト対策</p>
+			<iframe width="90%" height="315" src="https://www.youtube.com/embed/v0ZQU2gq_J0?si=tH6_rl3O-blEI_X7" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+	</div>
+-->
+    <iframe id="searchFrame" class="search-frame" width="" height=""></iframe>
+</body>
+</html>
+<script>
+    let intervalId = null;
+    let progressBarIntervalId = null;
+    let searchCount = 0;
+    let currentCount = 0;
+    let breakIntervalFlag = false;
+
+    // ランダムなWikipediaのタイトルを取得
+    function getRandomWikipediaTitle(callback) {
+        $.ajax({
+            url: 'https://ja.wikipedia.org/w/api.php',
+            data: {
+                action: 'query',
+                format: 'json',
+                list: 'random',
+                rnnamespace: 0,
+                rnlimit: 1,
+                origin: '*'
+            },
+            success: function(data) {
+                const title = data.query.random[0].title;
+                if (callback) callback(title);
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    // 検索を更新する
+    function updateSearch(title) {
+        const userInput = $('#searchUrl').val();
+        const url = new URL(userInput);
+        url.searchParams.set('q', title);
+        $('#searchFrame').attr('src', url.toString());
+        searchCount++;
+        $('#searchCount').text(searchCount);
+    }
+
+        function updateProgressBar(duration, interval) {
+            let progress = 0;
+            const increment = 100 / (duration / interval);
+
+            progressBarIntervalId = setInterval(function() {
+                if (breakIntervalFlag) {
+                    progress += increment;
+                    $('#progressBar').css('width', progress + '%').attr('aria-valuenow', progress);
+
+                    if (progress >= 100) {
+                        clearInterval(progressBarIntervalId);
+                        $('#progressBar').css('width', '0%').attr('aria-valuenow', 0);
+                        breakIntervalFlag = false;
+                    }
+                }
+            }, interval);
+        }
+
+        function startUpdate() {
+            const interval = parseInt($('#updateInterval').val(), 10) * 1000;
+            const intervalCount = parseInt($('#intervalCount').val(), 10);
+            const breakInterval = parseInt($('#breakInterval').val(), 10) * 60 * 1000;
+
+            if (isNaN(interval) || interval <= 0) {
+                alert('正しい更新間隔を入力してください。');
+                return;
+            }
+
+            if (intervalId) clearInterval(intervalId);
+            if (progressBarIntervalId) clearInterval(progressBarIntervalId);
+
+            getRandomWikipediaTitle(updateSearch);
+            currentCount = 1;
+
+            intervalId = setInterval(function() {
+                if (currentCount < intervalCount) {
+                    getRandomWikipediaTitle(updateSearch);
+                    currentCount++;
+                } else {
+                    clearInterval(intervalId);
+                    breakIntervalFlag = true;
+                    updateProgressBar(breakInterval, 1000);
+                    setTimeout(startUpdate, breakInterval);
+                    currentCount = 0;
+                }
+            }, interval);
+        }
+
+        $(document).ready(function() {
+            $('#startUpdate').click(function() {
+                $('#progressBar').css('width', '0%').attr('aria-valuenow', 0);
+                startUpdate();
+            });
+            $('#stopUpdate').click(function() {
+                if (intervalId) clearInterval(intervalId);
+                if (progressBarIntervalId) clearInterval(progressBarIntervalId);
+                $('#progressBar').css('width', '0%').attr('aria-valuenow', 0);
+                breakIntervalFlag = false;
+            });
+        });
+    </script>

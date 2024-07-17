@@ -19,7 +19,7 @@
             margin-bottom: 20px;
         }
         .instructions {
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
         .search-history {
             margin-top: 20px;
@@ -27,9 +27,13 @@
     </style>
 </head>
 <body>
+    <h1 class="alert alert-primary m-1">Auto Bing Search</h1>
     <div class="d-flex justify-content-start my-2">
         <button class="btn btn-primary me-2" id="startUpdate">更新開始</button>
         <button class="btn btn-danger" id="stopUpdate">更新ストップ</button>
+    </div>
+    <div class="progress">
+        <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">クールダウン中</div>
     </div>
     <div class="search-history">
         <h3>検索履歴</h3>
@@ -37,7 +41,6 @@
         <div id="searchList"></div>
     </div>
     <div class="instructions">
-        <div class="div alert alert-primary m-1">Auto Bing Search</div>
         <h2>使い方</h2>
         <ol class="list-group list-group-numbered">
             <li class="list-group-item">Bingのウェブサイト(<a href="https://www.bing.com/" target="_blank">https://www.bing.com/</a>)を開き、何かキーワードで検索します。</li>
@@ -63,9 +66,6 @@
     <div class="input-group mb-3">
         <span class="input-group-text">〇分のインターバル:</span>
         <input type="number" class="form-control" id="breakInterval" value="60">
-    </div>
-    <div class="progress">
-        <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">クールダウン中</div>
     </div>
 <!--
     <div class="alert alert-info">

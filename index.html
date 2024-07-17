@@ -27,6 +27,15 @@
     </style>
 </head>
 <body>
+    <div class="d-flex justify-content-start my-2">
+        <button class="btn btn-primary me-2" id="startUpdate">更新開始</button>
+        <button class="btn btn-danger" id="stopUpdate">更新ストップ</button>
+    </div>
+    <div class="search-history">
+        <h3>検索履歴</h3>
+        <p>検索回数: <span id="searchCount">0</span></p>
+        <div id="searchList"></div>
+    </div>
     <div class="instructions">
         <div class="div alert alert-primary m-1">Auto Bing Search</div>
         <h2>使い方</h2>
@@ -57,15 +66,6 @@
     </div>
     <div class="progress">
         <div class="progress-bar bg-warning" id="progressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">クールダウン中</div>
-    </div>
-    <div class="d-flex justify-content-start my-2">
-        <button class="btn btn-primary me-2" id="startUpdate">更新開始</button>
-        <button class="btn btn-danger" id="stopUpdate">更新ストップ</button>
-    </div>
-    <div class="search-history">
-        <h3>検索履歴</h3>
-        <p>検索回数: <span id="searchCount">0</span></p>
-        <div id="searchList"></div>
     </div>
 <!--
     <div class="alert alert-info">
